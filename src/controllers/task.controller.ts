@@ -22,12 +22,11 @@ export class TaskController {
       }
       return;
     }
-    const { title, description, status, priority, dueDate } = req.body;
+    const { title, status, priority, dueDate } = req.body;
 
     try {
       const task = await this.taskService.createTask({
         title,
-        description,
         status,
         priority,
         dueDate: dueDate ? new Date(dueDate) : undefined,
