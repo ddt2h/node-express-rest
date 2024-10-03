@@ -43,15 +43,17 @@ export class TaskController {
   };
 
   getTasks = async (req: Request, res: Response): Promise<void> => {
-    const { status, priority, dueDate } = req.query;
+    const { status, priority, dueDate, limit, page } = req.query;
 
     const filter = {
       status: status ? status.toString() : null,
       priority: priority ? priority.toString() : null,
       dueDate: dueDate ? dueDate.toString() : null,
+      limit: Number(limit),
+      page: Number(page),
     };
     try {
-      const tasks = await this.taskService.getTasks(filter.status, filter.priority, filter.dueDate);
+      const tasks = await this.taskService.getTasks(filter.status, filter.priority, filter.dueDate, filter.limit, filter.page);
       res.status(messages.success.statusCode).json({ message: messages.success.message, data: tasks });
     } catch (error) {
       res.status(messages.serverError.statusCode).json({ message: messages.serverError.message, error });

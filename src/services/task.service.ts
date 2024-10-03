@@ -12,7 +12,9 @@ export class TaskService {
     return task.save();
   }
 
-  async getTasks(status: string | null, priority: string | null, dueDate: string | null): Promise<ITask[]> {
+  async getTasks(status: string | null, priority: string | null, dueDate: string | null,
+    limit: number | null = 10, page: number = 0
+  ): Promise<ITask[]> {
     const query: MongooseQueryOptions = {};
 
     if (status) {
@@ -25,7 +27,12 @@ export class TaskService {
       query.dueDate = { $lte: new Date(dueDate) };
     }
 
-    return Task.find(query).exec();
+    const options = {
+      limit: limit ?? 10,
+      skip: (page - 1) * (limit ?? 10)
+    };
+
+    return Task.find(query).limit(options.limit).skip(options.skip).exec();
   }
 
   async getTaskById(id: string): Promise<ITask | null> {
