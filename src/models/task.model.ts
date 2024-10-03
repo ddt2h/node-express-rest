@@ -2,7 +2,6 @@ import mongoose, { Schema } from 'mongoose';
 
 export interface ITask {
   title: string;
-  description?: string;
   status: 'new' | 'in progress' | 'completed';
   priority: 'low' | 'medium' | 'high';
   dueDate?: Date;
@@ -10,7 +9,6 @@ export interface ITask {
 
 const TaskSchema: Schema = new Schema({
   title: { type: String, required: true },
-  description: { type: String },
   status: {
     type: String,
     enum: ['new', 'in progress', 'completed'],
