@@ -1,6 +1,7 @@
 import express from 'express';
-import taskRoutes from './routes/task.routes';
 import mongoose from 'mongoose';
+
+import taskRoutes from './routes/task.routes';
 
 const mongoURL = process.env.MONGO_URL || 'mongodb://localhost:27017/mydatabase';
 

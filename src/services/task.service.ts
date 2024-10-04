@@ -1,5 +1,5 @@
-import { MongooseQueryOptions } from "mongoose";
-import Task, { ITask } from "../models/task.model";
+import { MongooseQueryOptions } from 'mongoose';
+import Task, { ITask } from '../models/task.model';
 
 export class TaskService {
   async createTask(data: Partial<ITask>): Promise<ITask> {
@@ -13,7 +13,7 @@ export class TaskService {
   }
 
   async getTasks(status: string | null, priority: string | null, dueDate: string | null,
-    limit: number | null = 10, page: number = 0
+    limit: number = 10, page: number = 0
   ): Promise<ITask[]> {
     const query: MongooseQueryOptions = {};
 

@@ -1,4 +1,4 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose from 'mongoose';
 
 export interface ITask {
   title: string;
@@ -7,7 +7,7 @@ export interface ITask {
   dueDate?: Date;
 }
 
-const TaskSchema: Schema = new Schema({
+const TaskSchema: mongoose.Schema = new mongoose.Schema({
   title: { type: String, required: true },
   status: {
     type: String,
