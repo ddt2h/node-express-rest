@@ -8,9 +8,6 @@
  *         - title
  *         - status
  *       properties:
- *         id:
- *           type: string
- *           description: The auto-generated id of the task
  *         title:
  *           type: string
  *           description: The title of your task
