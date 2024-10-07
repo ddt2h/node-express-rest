@@ -1,8 +1,0 @@
-node_modules/
-.history/
-coverage/
-.gitignore
-.dockerignore
-dist/
-
-
