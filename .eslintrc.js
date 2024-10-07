@@ -7,7 +7,6 @@ module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
-    'plugin:prettier/recommended',
   ],
   parserOptions: {
     ecmaVersion: 12,
@@ -19,6 +18,6 @@ module.exports = {
     'quotes': ['error', 'single', { avoidEscape: true }], 
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
-    'no-console': 2,
+    'no-console': 0,
   },
 };
