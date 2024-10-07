@@ -1,2 +1,3 @@
-#to run tests: npm run test
-#to start docker: sudo docker compose up --build
+Для запуска тестов -> npm run test
+Для запуска сервера -> sudo docker compose up --build
+Для просмотра Swagger -> localhost:3000/api-docs

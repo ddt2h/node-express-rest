@@ -1,5 +1,4 @@
-import Task from '../models/task.model';
-import { ITask } from '../models/task.model';
+import Task, { ITask } from '../models/task.model';
 import { TaskService } from '../services/task.service';
 
 jest.mock('../models/task.model');

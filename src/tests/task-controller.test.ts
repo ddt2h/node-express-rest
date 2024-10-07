@@ -1,14 +1,11 @@
 import { Request, Response } from 'express';
-import { TaskController } from '../controllers/task.controller';
-import { TaskService } from '../services/task.service';
-import { messages } from '../constants/messages';
 import mongoose from 'mongoose';
 import { ValidationError } from 'yup';
+import { TaskController } from '../controllers/task.controller';
+import { messages } from '../constants/messages';
 import { ITask } from '../models/task.model';
 
 jest.mock('../services/task.service');
-
-const mockTaskService = TaskService as jest.MockedClass<typeof TaskService>;
 
 describe('TaskController', () => {
     let req: Partial<Request>;
