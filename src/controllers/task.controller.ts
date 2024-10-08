@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
+import { ValidationError } from 'yup';
+
 import { TaskService } from '../services/task.service';
 import { messages } from '../constants/messages';
 import { createTaskSchema } from '../yup-forms/create-task'
-import mongoose from 'mongoose';
-import { ValidationError } from 'yup';
 
 export class TaskController {
   private taskService: TaskService;
@@ -22,7 +23,6 @@ export class TaskController {
       }
       return;
     }
-
     try {
       const task = await this.taskService.createTask(req.body);
 
