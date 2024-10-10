@@ -1,8 +1,8 @@
 import bcryptjs from 'bcryptjs'
+import { JwtPayload } from 'jsonwebtoken';
 
 import User, { IUser } from '../models/user.model';
 import * as jwtUtils from '../utils/jwt.utils'
-import { JwtPayload } from 'jsonwebtoken';
 
 export class AuthService {
   async signUp(data: Partial<IUser>): Promise<IUser> {

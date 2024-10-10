@@ -4,6 +4,7 @@ import { ValidationError } from 'yup';
 import { messages } from '../constants/messages';
 import { AuthService } from '../services/auth.service';
 import { createUserSchema } from '../yup-forms/create-user';
+
 export class AuthController {
   private authService: AuthService;
   constructor() {
