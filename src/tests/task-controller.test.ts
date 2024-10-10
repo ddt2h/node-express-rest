@@ -113,7 +113,7 @@ describe('TaskController', () => {
       expect(res.status).toHaveBeenCalledWith(messages.invalidId.statusCode);
       expect(mockJson).toHaveBeenCalledWith({ message: messages.invalidId.message });
     });
-
+    
     it('should return a task', async () => {
       req.params = { id: new mongoose.Types.ObjectId().toString() };
       const mockTask: ITask = { title: 'Test Task', status: 'new', priority: 'medium' };
@@ -241,4 +241,99 @@ describe('TaskController', () => {
       });
     });
   })
+  describe('getTasks', () => {
+    it('should handle missing query parameters', async () => {
+      req.query = {}; 
+
+      const mockTasks: ITask[] = [{ title: 'Task 1', status: 'new', priority: 'high' }];
+      jest.spyOn(taskController['taskService'], 'getTasks').mockResolvedValue(mockTasks);
+
+      await taskController.getTasks(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(messages.success.statusCode);
+      expect(mockJson).toHaveBeenCalledWith({
+        message: messages.success.message,
+        data: mockTasks,
+      });
+    });
+
+    it('should handle invalid query parameters', async () => {
+      req.query = { status: 'invalid', priority: 'invalid' };
+
+      const mockTasks: ITask[] = [{ title: 'Task 1', status: 'new', priority: 'high' }];
+      jest.spyOn(taskController['taskService'], 'getTasks').mockResolvedValue(mockTasks);
+
+      await taskController.getTasks(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(messages.success.statusCode);
+      expect(mockJson).toHaveBeenCalledWith({
+        message: messages.success.message,
+        data: mockTasks,
+      });
+    });
+
+    it('should return server error when taskService.getTasks fails', async () => {
+      req.query = {};
+
+      jest.spyOn(taskController['taskService'], 'getTasks').mockRejectedValue(new Error('Error'));
+
+      await taskController.getTasks(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(messages.serverError.statusCode);
+      expect(mockJson).toHaveBeenCalledWith({
+        message: messages.serverError.message,
+        error: expect.any(Error),
+      });
+    });
+  });
+
+  describe('getTaskById', () => {
+    it('should handle invalid task ID', async () => {
+      req.params = { id: 'invalid-id' };
+
+      await taskController.getTaskById(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(messages.invalidId.statusCode);
+      expect(mockJson).toHaveBeenCalledWith({ message: messages.invalidId.message });
+    });
+
+    it('should return server error when taskService.getTaskById fails', async () => {
+      req.params = { id: new mongoose.Types.ObjectId().toString() };
+
+      jest.spyOn(taskController['taskService'], 'getTaskById').mockRejectedValue(new Error('Error'));
+
+      await taskController.getTaskById(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(messages.serverError.statusCode);
+      expect(mockJson).toHaveBeenCalledWith({
+        message: messages.serverError.message,
+        error: expect.any(Error),
+      });
+    });
+  });
+
+  describe('deleteTask', () => {
+    it('should handle invalid task ID', async () => {
+      req.params = { id: 'invalid-id' };
+
+      await taskController.deleteTask(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(messages.invalidId.statusCode);
+      expect(mockJson).toHaveBeenCalledWith({ message: messages.invalidId.message });
+    });
+
+    it('should return server error when taskService.deleteTask fails', async () => {
+      req.params = { id: new mongoose.Types.ObjectId().toString() };
+
+      jest.spyOn(taskController['taskService'], 'deleteTask').mockRejectedValue(new Error('Error'));
+
+      await taskController.deleteTask(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(messages.serverError.statusCode);
+      expect(mockJson).toHaveBeenCalledWith({
+        message: messages.serverError.message,
+        error: expect.any(Error),
+      });
+    });
+  });
 });

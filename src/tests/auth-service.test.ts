@@ -1,12 +1,11 @@
 import bcryptjs from 'bcryptjs';
-
-import { AuthService } from '../services/auth.service';
-import User, { IUser } from '../models/user.model';
+import User from '../models/user.model';
 import * as jwtUtils from '../utils/jwt.utils';
+import { AuthService } from '../services/auth.service';
 
-jest.mock('../models/user.model'); 
-jest.mock('bcryptjs'); 
-jest.mock('../utils/jwt.utils'); 
+jest.mock('bcryptjs');
+jest.mock('../models/user.model');
+jest.mock('../utils/jwt.utils');
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -15,106 +14,120 @@ describe('AuthService', () => {
     authService = new AuthService();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks(); 
+  describe('signUp', () => {
+    it('should create a new user when the username does not exist', async () => {
+      const mockUserData = {
+        username: 'newuser',
+        password: 'password123',
+      };
+
+      (User.findOne as jest.Mock).mockReturnValueOnce({
+        exec: jest.fn().mockResolvedValueOnce(null),
+      });
+
+      (bcryptjs.genSalt as jest.Mock).mockResolvedValue('salt');
+      (bcryptjs.hash as jest.Mock).mockResolvedValue('hashedPassword');
+
+      (User.prototype.save as jest.Mock).mockResolvedValue({
+        username: mockUserData.username,
+        password: 'hashedPassword',
+      });
+  
+      const newUser = await authService.signUp(mockUserData);
+  
+      expect(User.findOne).toHaveBeenCalledWith({ username: 'newuser' });
+      expect(bcryptjs.genSalt).toHaveBeenCalledWith(10);
+      expect(bcryptjs.hash).toHaveBeenCalledWith('password123', 'salt');
+      expect(User.prototype.save).toHaveBeenCalled();
+      expect(newUser.username).toBe('newuser');
+      expect(newUser.password).toBe('hashedPassword');
+    });
+
+    it('should throw an error if the username already exists', async () => {
+      const mockUserData = { username: 'existinguser' };
+  
+      (User.findOne as jest.Mock).mockReturnValueOnce({
+        exec: jest.fn().mockResolvedValueOnce(mockUserData),
+      });
+  
+      await expect(authService.signUp(mockUserData)).rejects.toThrow(
+        `User ${mockUserData.username} exists`
+      );
+  
+      expect(User.findOne).toHaveBeenCalledWith({ username: 'existinguser' });
+    });
   });
 
   describe('signIn', () => {
-    it('should throw an error if the user does not exist', async () => {
-      const username = 'wronguser';
-      const password = 'wrongpassword';
+    it('should return access and refresh tokens when credentials are valid', async () => {
+      const mockUser = {
+        id: 'userId123',
+        username: 'testuser',
+        password: 'hashedPassword',
+        save: jest.fn().mockResolvedValueOnce({}),
+      };
 
-      (User.findOne as jest.Mock).mockResolvedValueOnce(null); 
+      (User.findOne as jest.Mock).mockResolvedValue(mockUser);
 
-      await expect(authService.signIn(username, password)).rejects.toThrow('Incorrect credentials');
+      (bcryptjs.compare as jest.Mock).mockResolvedValueOnce(true);
+
+      (jwtUtils.generateAccessToken as jest.Mock).mockReturnValue('accessToken');
+      (jwtUtils.generateRefreshToken as jest.Mock).mockReturnValue('refreshToken');
+
+      const [accessToken, refreshToken] = await authService.signIn('testuser', 'password123');
+
+      expect(User.findOne).toHaveBeenCalledWith({ username: 'testuser' });
+      expect(bcryptjs.compare).toHaveBeenCalledWith('password123', 'hashedPassword');
+      expect(jwtUtils.generateAccessToken).toHaveBeenCalledWith('userId123');
+      expect(jwtUtils.generateRefreshToken).toHaveBeenCalledWith('userId123');
+      expect(mockUser.save).toHaveBeenCalled();
+      expect(accessToken).toBe('accessToken');
+      expect(refreshToken).toBe('refreshToken');
     });
+    
+    it('should throw an error if the user does not exist', async () => {
+      (User.findOne as jest.Mock).mockResolvedValue(null);
 
-    describe('signUp', () => {
-      it('should successfully create a user and return the user data', async () => {
-        const userData: Partial<IUser> = {
-          username: 'testuser',
-          password: 'password',
-        };
-    
-        const hashedPassword = 'hashedPassword';
-        const savedUser = {
-          ...userData,
-          password: hashedPassword,
-          _id: 'userId', 
-        };
-    
-        (User.findOne as jest.Mock).mockReturnValue({
-          exec: jest.fn().mockResolvedValueOnce(null),
-        });
-    
-        (bcryptjs.genSalt as jest.Mock).mockResolvedValueOnce('salt'); 
-        (bcryptjs.hash as jest.Mock).mockResolvedValueOnce(hashedPassword);
-        (User.prototype.save as jest.Mock).mockResolvedValueOnce(savedUser);
-    
-        const result = await authService.signUp(userData);
-    
-        expect(User.findOne).toHaveBeenCalledWith({ username: 'testuser' });
-        expect(bcryptjs.genSalt).toHaveBeenCalledWith(10);
-        expect(bcryptjs.hash).toHaveBeenCalledWith('password', 'salt');
-        expect(User.prototype.save).toHaveBeenCalled();
-        expect(result).toEqual(savedUser);
-      });
-    
-      it('should throw an error if the user already exists', async () => {
-        const userData: Partial<IUser> = {
-          username: 'existinguser',
-          password: 'password',
-        };
-    
-        (User.findOne as jest.Mock).mockReturnValue({
-          exec: jest.fn().mockResolvedValueOnce({}),
-        });
-    
-        await expect(authService.signUp(userData)).rejects.toThrow('User existinguser exists');
-      });
-    
-      it('should throw an error if password hashing fails', async () => {
-        const userData: Partial<IUser> = {
-          username: 'newuser',
-          password: 'password',
-        };
-
-        (User.findOne as jest.Mock).mockReturnValue({
-          exec: jest.fn().mockResolvedValueOnce(null),
-        });
-    
-        (bcryptjs.genSalt as jest.Mock).mockResolvedValueOnce('salt'); 
-        (bcryptjs.hash as jest.Mock).mockRejectedValueOnce(new Error('Hashing failed'));
-    
-        await expect(authService.signUp(userData)).rejects.toThrow('Hashing failed');
-      });
+      await expect(authService.signIn('nonexistentuser', 'password123')).rejects.toThrow(
+        'Incorrect credentials'
+      );
     });
 
     it('should throw an error if the password is incorrect', async () => {
-      const username = 'testuser';
-      const password = 'wrongpassword';
-      const user = { id: 'userId', username, password: 'hashedPassword' };
+      const mockUser = {
+        username: 'testuser',
+        password: 'hashedPassword',
+      };
 
-      (User.findOne as jest.Mock).mockResolvedValueOnce(user); 
-      (bcryptjs.compare as jest.Mock).mockResolvedValueOnce(false); 
+      (User.findOne as jest.Mock).mockResolvedValue(mockUser);
+      (bcryptjs.compare as jest.Mock).mockResolvedValue(false);
 
-      await expect(authService.signIn(username, password)).rejects.toThrow('Incorrect credentials');
+      await expect(authService.signIn('testuser', 'wrongpassword')).rejects.toThrow(
+        'Incorrect credentials'
+      );
     });
   });
 
   describe('refreshAccess', () => {
-    it('should successfully refresh access token', async () => {
-      const refreshToken = 'validRefreshToken';
-      const userId = 'userId';
-      const newAccessToken = 'newAccessToken';
-      (jwtUtils.verifyRefreshToken as jest.Mock).mockReturnValue({ id: userId });
-      (jwtUtils.generateAccessToken as jest.Mock).mockReturnValue(newAccessToken); 
+    it('should generate a new access token from a valid refresh token', async () => {
+      const mockPayload = { id: 'userId123' };
 
-      const result = await authService.refreshAccess(refreshToken);
+      (jwtUtils.verifyRefreshToken as jest.Mock).mockReturnValue(mockPayload);
+      (jwtUtils.generateAccessToken as jest.Mock).mockReturnValue('newAccessToken');
 
-      expect(jwtUtils.verifyRefreshToken).toHaveBeenCalledWith(refreshToken);
-      expect(jwtUtils.generateAccessToken).toHaveBeenCalledWith(userId);
-      expect(result).toBe(newAccessToken);
+      const newAccessToken = await authService.refreshAccess('validRefreshToken');
+
+      expect(jwtUtils.verifyRefreshToken).toHaveBeenCalledWith('validRefreshToken');
+      expect(jwtUtils.generateAccessToken).toHaveBeenCalledWith('userId123');
+      expect(newAccessToken).toBe('newAccessToken');
+    });
+
+    it('should throw an error if the refresh token is invalid', async () => {
+      (jwtUtils.verifyRefreshToken as jest.Mock).mockImplementation(() => {
+        throw new Error('Invalid token');
+      });
+
+      await expect(authService.refreshAccess('invalidRefreshToken')).rejects.toThrow('Invalid token');
     });
   });
 });

@@ -39,7 +39,9 @@ export class AuthService {
     const accessToken = jwtUtils.generateAccessToken(user.id);
     const refreshToken = jwtUtils.generateRefreshToken(user.id);
 
-    await user.updateOne({ refreshToken: refreshToken }).exec();
+    user.refreshToken = refreshToken;
+
+    await user.save();
 
     return [accessToken, refreshToken];
   }

@@ -12,11 +12,15 @@ export class TaskService {
     });
   }
 
-  async getTasks(status: string | null, priority: string | null, dueDate: string | null,
-    limit = 10, page = 0
+  async getTasks(
+    status: string | null,
+    priority: string | null,
+    dueDate: string | null,
+    limit = 10,
+    page = 1 
   ): Promise<ITask[]> {
     const query: MongooseQueryOptions = {};
-
+  
     if (status) {
       query.status = status;
     }
@@ -27,11 +31,14 @@ export class TaskService {
       query.dueDate = { $lte: new Date(dueDate) };
     }
 
+    const validLimit = Math.max(limit, 1);
+    const validPage = Math.max(page, 1);
+  
     const options = {
-      limit: limit ?? 10,
-      skip: (page - 1) * (limit ?? 10)
+      limit: validLimit,
+      skip: (validPage - 1) * validLimit,
     };
-
+  
     return Task.find(query).limit(options.limit).skip(options.skip).exec();
   }
 
